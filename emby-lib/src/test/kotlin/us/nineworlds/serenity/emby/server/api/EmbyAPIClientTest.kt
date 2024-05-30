@@ -35,7 +35,7 @@ class EmbyAPIClientTest {
     val authenticateResult = authenticate()
 
     assertThat(authenticateResult).isNotNull()
-    assertThat(authenticateResult.accesToken).isNotBlank()
+    assertThat(authenticateResult.accessToken).isNotBlank()
     assertThat(client.serverId).isNotBlank()
     assertThat(client.accessToken).isNotBlank()
     assertThat(client.userId).isNotBlank()

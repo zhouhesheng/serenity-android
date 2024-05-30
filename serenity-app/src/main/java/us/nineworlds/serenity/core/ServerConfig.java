@@ -41,6 +41,9 @@ public class ServerConfig extends BaseInjector implements IConfiguration {
   private String serveraddress;
   private String serverport;
   private String discoveredServers;
+  private String username;
+  private String password;
+
 
   @Inject protected SharedPreferences preferences;
 
@@ -56,6 +59,8 @@ public class ServerConfig extends BaseInjector implements IConfiguration {
     serveraddress = preferences.getString("server", "");
     discoveredServers = preferences.getString("discoveredServer", "");
     serverport = preferences.getString("serverport", "32400");
+    username = preferences.getString("username", "");
+    password = preferences.getString("password", "");
   }
 
   @Override public String getHost() {
@@ -75,6 +80,26 @@ public class ServerConfig extends BaseInjector implements IConfiguration {
 
   @Override public void setPort(String port) {
     serverport = port;
+  }
+
+  @Override
+  public String getUsername() {
+    return username;
+  }
+
+  @Override
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  @Override
+  public String getPassword() {
+    return password;
+  }
+
+  @Override
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public static IConfiguration getInstance(Context context) {
@@ -129,6 +154,16 @@ public class ServerConfig extends BaseInjector implements IConfiguration {
         discoveredServers = sharedPreferences.getString(key, "");
         serveraddress = discoveredServers;
         storeServerAddress();
+        return;
+      }
+
+      if ("username".equals(key)) {
+        username = sharedPreferences.getString(key, "");
+        return;
+      }
+
+      if ("password".equals(key)) {
+        password = sharedPreferences.getString(key, "");
         return;
       }
     }

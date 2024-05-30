@@ -6,14 +6,14 @@ public class SerenityUser implements us.nineworlds.serenity.common.rest.Serenity
 
   private final String userName;
   private final String userId;
-  private final boolean hasPassword;
+  private final String password;
   private final Server serverInfo;
   private final String accessToken;
 
   private SerenityUser(Builder builder) {
     this.userName = builder.userName;
     this.userId = builder.userId;
-    this.hasPassword = builder.hasPassword;
+    this.password = builder.password;
     this.serverInfo = builder.serverInfo;
     this.accessToken = builder.accessToken;
   }
@@ -34,8 +34,8 @@ public class SerenityUser implements us.nineworlds.serenity.common.rest.Serenity
     return accessToken;
   }
 
-  @Override public boolean hasPassword() {
-    return hasPassword;
+  @Override public String password() {
+    return password;
   }
 
   @Override public Server getUserServer() {
@@ -45,7 +45,7 @@ public class SerenityUser implements us.nineworlds.serenity.common.rest.Serenity
   public static class Builder {
     private String userName;
     private String userId;
-    private boolean hasPassword;
+    private String password;
     private Server serverInfo;
     private String accessToken;
 
@@ -59,8 +59,8 @@ public class SerenityUser implements us.nineworlds.serenity.common.rest.Serenity
       return this;
     }
 
-    public Builder hasPassword(boolean hasPassword) {
-      this.hasPassword = hasPassword;
+    public Builder password(String password) {
+      this.password = password;
       return this;
     }
 

@@ -26,4 +26,13 @@ public interface IConfiguration {
 	 */
 	public abstract void setPort(String port);
 
+	public abstract String getUsername();
+
+	public abstract void setUsername(String username);
+
+
+	public abstract String getPassword();
+
+	public abstract void setPassword(String password);
+
 }

@@ -23,6 +23,16 @@
         android:key="serverport"
         android:summary="@string/default_port_summary"
         android:title="@string/server_port"/>
+
+    <EditTextPreference
+        android:defaultValue=""
+        android:key="username"
+        android:title="@string/user_name"/>
+
+    <EditTextPreference
+        android:defaultValue=""
+        android:key="password"
+        android:title="@string/password"/>
   </PreferenceCategory>
 
 </PreferenceScreen>

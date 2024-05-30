@@ -83,13 +83,13 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
         return "$baseUrl/Users/$userId/Images/Primary"
     }
 
-    fun authenticate(userName: String, password: String = ""): AuthenticationResult {
-        val authenticationResul = AuthenticateUserByName(userName, "", password, password)
+    fun authenticate(userName: String, password: String): AuthenticationResult {
+        val authenticationResul = AuthenticateUserByName(userName, password)
         val call = usersService.authenticate(authenticationResul, headerMap())
         val response = call.execute()
         if (response.isSuccessful) {
             val body = response.body()
-            accessToken = body!!.accesToken
+            accessToken = body!!.accessToken
             serverId = body.serverId
             userId = body.userInfo.id!!
 
@@ -125,12 +125,12 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
             val result = fetchItem(itemId)
             return when (result.type) {
                 "Series" -> MediaContainerAdaptor().createSeriesList(listOf(result))
-                else -> MediaContainerAdaptor().createVideoList(listOf(result))
+                else -> MediaContainerAdaptor().createVideoList(listOf(result), fetchAccessToken()!!)
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
-        return MediaContainerAdaptor().createVideoList(emptyList())
+        return MediaContainerAdaptor().createVideoList(emptyList(), fetchAccessToken()!!)
     }
 
     fun fetchItem(id: String): Item {
@@ -171,23 +171,32 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
         val allUsers = ArrayList<SerenityUser>()
         for (user in allPublicUsers) {
             val builder = us.nineworlds.serenity.common.rest.impl.SerenityUser.builder()
-            val sernityUser = builder.userName(user.name)
+            val serenityUser = builder.userName(user.name)
                     .userId(user.id)
-                    .hasPassword(user.hasPassword)
                     .build()
-            allUsers.add(sernityUser)
+            allUsers.add(serenityUser)
         }
+
+        val u = defaultUsername()
+        val p = defaultPassword()
+        if (!u.isNullOrEmpty() && !p.isNullOrEmpty()) {
+            val builder = us.nineworlds.serenity.common.rest.impl.SerenityUser.builder()
+            val user = builder.userName(u)
+                .password(p)
+                .build()
+            allUsers.add(user)
+        }
+
         return allUsers
     }
 
     override fun authenticateUser(user: SerenityUser): SerenityUser {
-        val authenticatedUser = authenticate(user.userName)
-
+        val authenticatedUser = authenticate(user.userName, user.password())
         return us.nineworlds.serenity.common.rest.impl.SerenityUser.builder()
-                .accessToken(authenticatedUser.accesToken)
+                .accessToken(authenticatedUser.accessToken)
                 .userName(user.userName)
                 .userId(user.userId)
-                .hasPassword(user.hasPassword())
+                .password(user.password())
                 .build()
     }
 
@@ -247,7 +256,7 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
         val call = usersService.fetchSimilarItemById(headerMap(), itemId = itemId, userId = userId!!, includeItemType = "Movie")
 
         val results = call.execute().body()
-        return MediaContainerAdaptor().createVideoList(results!!.items)
+        return MediaContainerAdaptor().createVideoList(results!!.items, fetchAccessToken()!!)
     }
 
     override fun retrieveItemByIdCategory(key: String, category: String, types: Types, startIndex: Int, limit: Int?): IMediaContainer {
@@ -302,7 +311,7 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
         }
 
         val results = call.execute().body()
-        return MediaContainerAdaptor().createVideoList(results!!.items)
+        return MediaContainerAdaptor().createVideoList(results!!.items, fetchAccessToken()!!)
     }
 
     override fun retrieveItemByCategories(key: String, category: String, secondaryCategory: String): IMediaContainer {
@@ -344,7 +353,7 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
 
         val results = call.execute().body()
 
-        return MediaContainerAdaptor().createVideoList(results!!.items)
+        return MediaContainerAdaptor().createVideoList(results!!.items, fetchAccessToken()!!)
     }
 
     override fun retrieveMovieMetaData(key: String): IMediaContainer {
@@ -373,7 +382,7 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
 
         val itemResults = itemCall.execute().body()
 
-        return MediaContainerAdaptor().createVideoList(itemResults!!.items)
+        return MediaContainerAdaptor().createVideoList(itemResults!!.items, fetchAccessToken()!!)
     }
 
     override fun searchEpisodes(key: String, query: String): IMediaContainer? {
@@ -459,8 +468,8 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
         if (offset > 0) {
             startOffset = offset.toLong().times(10000)
         }
-
-        return "${baseUrl}emby/Videos/$id/stream.mkv?DeviceId=$deviceId&AudioCodec=aac&VideoCodec=h264&CopyTimeStamps=true&EnableAutoStreamCopy=true&StartTimeTicks=$startOffset&PlaySessionId=$playSessionId"
+        val token = fetchAccessToken()!!
+        return "${baseUrl}emby/Videos/$id/stream.mkv?DeviceId=$deviceId&AudioCodec=aac&VideoCodec=h264&CopyTimeStamps=true&EnableAutoStreamCopy=true&StartTimeTicks=$startOffset&PlaySessionId=$playSessionId&X-Emby-Token=$token"
     }
 
     override fun reinitialize() {
@@ -468,7 +477,7 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
     }
 
     override fun createUserImageUrl(user: SerenityUser, width: Int, height: Int): String {
-        return "$baseUrl/Emby/Users/${user.userId}/Images/Primary?Width=$width&Height=$height"
+        return "$baseUrl/emby/Users/${user.userId}/Images/Primary?Width=$width&Height=$height"
     }
 
     override fun startPlaying(itemId: String) {
@@ -533,6 +542,10 @@ class EmbyAPIClient(val context: Context, baseUrl: String = "http://localhost:80
     fun fetchUserId() = prefs.getString("userId", "")
 
     fun fetchAccessToken() = prefs.getString("embyAccessToken", "")
+
+    fun defaultUsername() = prefs.getString("username", "")
+
+    fun defaultPassword() = prefs.getString("password", "")
 
     override fun supportsMultipleUsers(): Boolean = true
 }

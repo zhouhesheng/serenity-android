@@ -10,7 +10,7 @@ public interface SerenityUser {
 
   String getAccessToken();
 
-  boolean hasPassword();
+  String password();
 
   Server getUserServer();
 
